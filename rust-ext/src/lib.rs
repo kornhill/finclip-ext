@@ -3,6 +3,9 @@ use std::{sync::Mutex, collections::HashMap};
 use once_cell::sync::OnceCell;
 use std::ffi::{CString, CStr};
 
+#[cfg(feature = "testonly")]
+use serde_json::{json};
+
 type FinClipCall = fn(&String) -> String;
 pub struct FinClipExtApiSet {
     registry: HashMap<String, FinClipCall>,
@@ -21,23 +24,35 @@ impl FinClipExtApiSet {
     }
 
     pub fn invoke(&self, api_name: &String, input_json: &String) -> String {
+        println!("calling {}", api_name);
         let api = self.registry.get(api_name).unwrap();
         api(input_json)
-        
-        // match api {
-        //     Some(api) => api.unwrap()(input_json),
-        //     None => {
-        //         "{}".to_string()
-        //     }
-        // }
     }
 
 }
 
+#[cfg(not(feature = "testonly"))]
 pub fn finclip() -> &'static Mutex<FinClipExtApiSet> {
     static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
+
     INSTANCE.get_or_init(|| {
         let m = FinClipExtApiSet::new();
+        Mutex::new(m)
+    })
+}
+
+#[cfg(feature = "testonly")]
+pub fn finclip() -> &'static Mutex<FinClipExtApiSet> {
+    static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
+
+    INSTANCE.get_or_init(|| {
+        println!("testonly: initializing singleton");
+
+        let mut m = FinClipExtApiSet::new();
+
+        m.register("method_A".to_string(), invoke);
+        m.register("method_B".to_string(), invoke);
+        println!("testonly: initialized");
         Mutex::new(m)
     })
 }
@@ -85,4 +100,17 @@ pub unsafe extern "C" fn finclip_call(api_name: *const c_char, _input: *const c_
 #[no_mangle]
 pub unsafe extern "C" fn finclip_release(data: *mut c_char) {
     drop(CString::from_raw(data));
+}
+
+#[cfg(feature = "testonly")]
+fn invoke(input: &String) -> String {
+    println!("invoked with parameter {}", input);
+    
+    let john = json!({
+        "name": "john doe",
+        "address": "hong kong",
+        "phones": "+852 1234 5678"
+    });
+
+    john.to_string()
 }

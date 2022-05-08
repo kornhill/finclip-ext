@@ -23,8 +23,9 @@
     config.apiServer = @"http://127.0.0.1:8000";
     [[FATClient sharedClient] initWithConfig:config error:nil];
     [[FATClient sharedClient] setEnableLog:NO];
-//    [[FATClient sharedClient] registerSyncExtensionApi:@"generate_wallet" target:[FinClipExt singleton]];
+
     [[FinClipExt singleton] installFor:[FATClient sharedClient]];
+    
     
     return YES;
 }

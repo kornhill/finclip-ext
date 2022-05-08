@@ -56,8 +56,14 @@ static NSDictionary *finclipCall(id self, SEL _cmd, NSDictionary *input)
     NSString *api = NSStringFromSelector(_cmd);
     const char *capi = [api UTF8String];
     
-    const char *cresult = finclip_call(capi, cjson);
-    return [self jsonStringToDictionary:@(cresult)];
+    // Rust FFI tansfer returned data ownership here. Should be release back to Rust later
+    char *cresult = finclip_call(capi, cjson);
+    NSDictionary *output = [self jsonStringToDictionary:@(cresult)];
+    
+    // release resource back to Rust
+    finclip_release(cresult);
+    
+    return output;
  }
 
 - (NSDictionary *)exemplar:(NSDictionary *)param
@@ -76,9 +82,22 @@ static NSDictionary *finclipCall(id self, SEL _cmd, NSDictionary *input)
     const char *types = method_getTypeEncoding(exemplar_func);
     
     for (int i = 0; i < finclip_set(); i++) {
-        NSString *name = [NSString stringWithUTF8String:finclip_api_name(i)];
+        char* name_owned_by_rust = finclip_api_name(i);
+        NSString *name = [NSString stringWithUTF8String:name_owned_by_rust];
+        NSLog(@"adding extension API %@", name);
+        
         class_addMethod([self class], NSSelectorFromString(name), (IMP)finclipCall, types);
         [finclipSDK registerSyncExtensionApi:name target:self];
+        
+        // should comment out - verify dynamic methods are correctly registered
+        // and can truly be invoked
+        NSDictionary *param = @{
+                @"name": name
+        };
+        [self performSelectorOnMainThread:NSSelectorFromString(name) withObject:param waitUntilDone:YES];
+        
+        // remember to release resource back to Rust, or memory leak will result
+        finclip_release(name_owned_by_rust);
     }
     
 }
@@ -123,7 +142,7 @@ static NSDictionary *finclipCall(id self, SEL _cmd, NSDictionary *input)
                                                           error:&err];
     if(err)
     {
-        NSLog(@"json解析失败：%@",err);
+        NSLog(@"json parsing failure：%@",err);
         return nil;
     }
     return dic;

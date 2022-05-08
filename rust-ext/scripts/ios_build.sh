@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # building
 cbindgen src/lib.rs -l c > libfinclipext.h
-cargo lipo --release
+cargo lipo --release --features "testonly"
 
 # moving files to the ios project
 proj=ios
