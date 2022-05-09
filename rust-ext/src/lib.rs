@@ -4,8 +4,9 @@ use once_cell::sync::OnceCell;
 use std::ffi::{CString, CStr};
 
 #[cfg(feature = "testonly")]
-use serde_json::{json};
+use serde_json::json;
 
+static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
 type FinClipCall = fn(&String) -> String;
 pub struct FinClipExtApiSet {
     registry: HashMap<String, FinClipCall>,
@@ -16,6 +17,12 @@ impl FinClipExtApiSet {
         let reg: HashMap<String, FinClipCall> = HashMap::new();
         FinClipExtApiSet{
             registry: reg,
+        }
+    }
+
+    pub fn new_with(map: &HashMap<String, FinClipCall>) -> FinClipExtApiSet {
+        FinClipExtApiSet{
+            registry: map.clone(),
         }
     }
 
@@ -31,9 +38,18 @@ impl FinClipExtApiSet {
 
 }
 
+pub fn finclip_with(map: &HashMap<String, FinClipCall>) ->&'static Mutex<FinClipExtApiSet> {
+    //static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
+
+    INSTANCE.get_or_init(|| {
+        let m = FinClipExtApiSet::new_with(map);
+        Mutex::new(m)
+    })
+}
+
 #[cfg(not(feature = "testonly"))]
 pub fn finclip() -> &'static Mutex<FinClipExtApiSet> {
-    static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
+    // static INSTANCE: OnceCell<Mutex<FinClipExtApiSet>> = OnceCell::new();
 
     INSTANCE.get_or_init(|| {
         let m = FinClipExtApiSet::new();
@@ -61,6 +77,14 @@ pub fn register(api_name: String, api: FinClipCall) {
     let mut f = finclip().lock().unwrap();
     f.register(api_name, api);
     drop(f);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn finclip_init(ptr: *mut HashMap<String, FinClipCall>) {
+    if !ptr.is_null() {
+        let reg = &*ptr;
+        finclip_with(reg);
+    }
 }
 
 #[no_mangle]
