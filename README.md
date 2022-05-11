@@ -34,6 +34,6 @@ iOS、Android或其他技术类型的终端上的宿主App（嵌入了FinClip SD
 - 提供一个函数，它的作用是以'HashMap<String, FinClipCall>'作为自定义接口的“花名册”，登记准备提供给小程序开发者的自定义API的名录。例如'pub unsafe extern "C" myplugin_register_apis() -> \*mut HashMap<String, FinClipCall>'，注意HashMap必须用Box::into_raw包装成一个opaque pointer
 - 把希望提供给宿主的自定义函数，按 'fn(&String) -> String' 的签名去实现，入参和出参都是JSON格式的字符串，建议用serde_json crate进行处理
 
-其他详情参见demo。更详细内容请参考 https://www.finclip.com/blog/finclip-ext-with-rust/
+其他详情参见demo(https://github.com/kornhill/finclip-rust-ext-demo)。更详细内容请参考 https://www.finclip.com/blog/finclip-ext-with-rust/
 
 
