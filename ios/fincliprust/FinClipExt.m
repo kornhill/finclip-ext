@@ -40,9 +40,10 @@ static FinClipExt *_sharedMySingleton = nil;
     }   return self;
 }
 
--(void) installFor:(FATClient *)finclipInst
+-(void) installFor:(FATClient *)finclipInst withExt:(struct HashMap_String__FinClipCall*)map
 {
     finclipSDK = finclipInst;
+    finclip_init(map);
     [self addExtensionApi];
 }
 

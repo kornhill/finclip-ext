@@ -23,7 +23,7 @@ FOUNDATION_EXPORT const unsigned char FinClipRustExtVersionString[];
 }
 
 +(FinClipExt*)singleton;
--(void)installFor:(FATClient*)finclipInst;
+-(void)installFor:(FATClient*)finclipInst withExt:(struct HashMap_String__FinClipCall*)map;
 
 @end
 #endif /* FinClipExt_h */

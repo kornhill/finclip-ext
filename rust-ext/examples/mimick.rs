@@ -44,7 +44,7 @@ pub unsafe extern "C" fn myext_register_apis() -> *mut HashMap<String, FinClipCa
 #[no_mangle]
 pub unsafe extern "C" fn myext_release(ptr: *mut HashMap<String, FinClipCall>) {
     if !ptr.is_null() {
-        drop(ptr);
+        drop(Box::from_raw(ptr));
     }
 }
 
