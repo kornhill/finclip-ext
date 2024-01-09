@@ -5,6 +5,24 @@
 //  Created by c. liang on 26/4/2022.
 //
 
+/**
+这段 Objective-C 代码试图实现以下主要功能:
+
+1.单例模式
+通过单例模式实现一个 FinClipExt 的全局实例,方便作为扩展模块被外部访问和使用。
+2.动态注册扩展 API
+提供了一个添加扩展 API 的机制,可以在运行时动态将 Rust 实现的扩展函数注册成 Objective-C 的方法。
+3.与宿主应用交互
+通过传入的 FATClient 实例,可以获得宿主应用提供的机制来注册扩展 API,以便宿主应用可以调用这些扩展。
+4.数据转换
+实现了 JSON 序列化和反序列化的机制,用来在 Objective-C 和 Rust 实现的函数之间转换数据。
+5.Rust FFI
+使用 Rust 的 FFI 特性,调用由 Rust 语言实现的扩展模块的函数,将 Objective-C 和 Rust 语言连接了起来。
+主要目的是提供一个 Objective-C 的扩展封装,方便第三方开发者基于 Rust 开发一些扩展插件,并可以轻松集成到现有的 Objective-C 应用中。
+
+这样的动态扩展机制可以提高应用的扩展性和开发效率。
+*/
+
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 #import "FinClipExt.h"
